@@ -1,0 +1,533 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TextureView
+        android:id="@+id/texture_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageView
+        android:id="@+id/iv_mask"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <FrameLayout
+        android:id="@+id/fy_scanner_container"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:id="@+id/iv_scanner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+    </FrameLayout>
+
+    <LinearLayout
+        android:id="@+id/ly_menu_container"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:orientation="horizontal"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:id="@+id/iv_flash_torch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:layout_marginEnd="4dp"
+            android:background="@drawable/c_button_background"
+            android:padding="6dp"
+            android:src="@drawable/c_highlight_selector" />
+
+        <ImageView
+            android:id="@+id/iv_switch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:layout_marginEnd="4dp"
+            android:background="@drawable/c_button_background"
+            android:padding="6dp"
+            android:src="@drawable/c_flip_camera_ios_selector" />
+
+        <ImageView
+            android:id="@+id/iv_setting"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:layout_marginEnd="4dp"
+            android:background="@drawable/c_button_background"
+            android:padding="6dp"
+            android:src="@drawable/c_settings_selector" />
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/tv_solution"
+        style="@style/TextAppearance.AppCompat.Caption"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:layout_marginEnd="4dp"
+        android:drawablePadding="4dp"
+        android:ems="5"
+        android:gravity="center_horizontal"
+        android:text="1920 x 1080"
+        android:textColor="#fff"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/ly_menu_container" />
+
+    <TextView
+        android:id="@+id/tv_sub_title"
+        style="@style/TextAppearance.AppCompat.Subhead"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:gravity="center_horizontal"
+        android:textColor="#FFF"
+        app:layout_constraintBottom_toBottomOf="@id/ly_menu_container"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="@id/ly_menu_container"
+        app:layout_constraintWidth_percent=".8" />
+
+    <TextView
+        android:id="@+id/tv_camera_params"
+        style="@style/TextAppearance.AppCompat.Caption"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:textColor="#fff"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tv_sub_title" />
+
+    <TextView
+        android:id="@+id/tv_inner_tips"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:textColor="#FFF"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintWidth_percent=".8" />
+
+    <ImageView
+        android:id="@+id/iv_shutter"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
+        android:background="@drawable/c_button_background"
+        android:padding="8dp"
+        android:src="@drawable/c_photo_camera_selector"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent" />
+
+    <TextView
+        android:id="@+id/tv_back_page"
+        style="@style/TextAppearance.AppCompat.Subhead"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:drawableStart="@drawable/c_back"
+        android:drawablePadding="3dp"
+        android:gravity="center_vertical"
+        android:text="返回"
+        android:textColor="#FFF"
+        android:visibility="gone"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/cl_setting_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#fff"
+        android:clickable="true"
+        android:focusable="true"
+        android:paddingBottom="8dp"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:id="@+id/tv_setting_title"
+            style="@style/TextAppearance.AppCompat.Caption"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="#999"
+            android:paddingStart="12dp"
+            android:text="设置"
+            android:textColor="#333"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <!--画面旋转角度-->
+        <TextView
+            android:id="@+id/tv_label_video_rotation"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_marginTop="8dp"
+            android:text="画面旋转:"
+            android:textColor="#666"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tv_setting_title" />
+
+        <TextView
+            android:id="@+id/tv_video_rotation_0"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:drawableStart="@drawable/c_radio_selector"
+            android:drawablePadding="4dp"
+            android:gravity="center_vertical"
+            android:text="0°\u3000\u3000"
+            android:textColor="#333"
+            app:layout_constraintBottom_toBottomOf="@id/tv_label_video_rotation"
+            app:layout_constraintLeft_toRightOf="@id/tv_label_video_rotation"
+            app:layout_constraintTop_toTopOf="@id/tv_label_video_rotation" />
+
+        <TextView
+            android:id="@+id/tv_video_rotation_90"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:drawableStart="@drawable/c_radio_selector"
+            android:drawablePadding="4dp"
+            android:gravity="center_vertical"
+            android:text="90°\u3000\u2000"
+            android:textColor="#333"
+            app:layout_constraintBottom_toBottomOf="@id/tv_label_video_rotation"
+            app:layout_constraintLeft_toRightOf="@id/tv_video_rotation_0"
+            app:layout_constraintTop_toTopOf="@id/tv_label_video_rotation" />
+
+        <TextView
+            android:id="@+id/tv_video_rotation_180"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:drawableStart="@drawable/c_radio_selector"
+            android:drawablePadding="4dp"
+            android:gravity="center_vertical"
+            android:text="180°\u3000"
+            android:textColor="#333"
+            app:layout_constraintBottom_toBottomOf="@id/tv_label_video_rotation"
+            app:layout_constraintLeft_toRightOf="@id/tv_video_rotation_90"
+            app:layout_constraintTop_toTopOf="@id/tv_label_video_rotation" />
+
+        <TextView
+            android:id="@+id/tv_video_rotation_270"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:drawableStart="@drawable/c_radio_selector"
+            android:drawablePadding="4dp"
+            android:gravity="center_vertical"
+            android:text="270°\u3000"
+            android:textColor="#333"
+            app:layout_constraintBottom_toBottomOf="@id/tv_label_video_rotation"
+            app:layout_constraintLeft_toRightOf="@id/tv_video_rotation_180"
+            app:layout_constraintTop_toTopOf="@id/tv_label_video_rotation" />
+
+        <!--画面镜像-->
+        <TextView
+            android:id="@+id/tv_label_video_mirror"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_marginTop="12dp"
+            android:text="画面镜像:"
+            android:textColor="#666"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tv_label_video_rotation" />
+
+        <TextView
+            android:id="@+id/tv_video_mirror_open"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:drawableStart="@drawable/c_radio_selector"
+            android:drawablePadding="4dp"
+            android:gravity="center_vertical"
+            android:text="开启\u3000"
+            android:textColor="#333"
+            app:layout_constraintBottom_toBottomOf="@id/tv_label_video_mirror"
+            app:layout_constraintLeft_toRightOf="@id/tv_label_video_mirror"
+            app:layout_constraintTop_toTopOf="@id/tv_label_video_mirror" />
+
+        <TextView
+            android:id="@+id/tv_video_mirror_close"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:drawableStart="@drawable/c_radio_selector"
+            android:drawablePadding="4dp"
+            android:gravity="center_vertical"
+            android:text="关闭\u3000"
+            android:textColor="#333"
+            app:layout_constraintBottom_toBottomOf="@id/tv_label_video_mirror"
+            app:layout_constraintLeft_toRightOf="@id/tv_video_mirror_open"
+            app:layout_constraintTop_toTopOf="@id/tv_label_video_mirror" />
+
+        <!--帧镜像-->
+        <TextView
+            android:id="@+id/tv_label_frame_mirror"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_marginTop="12dp"
+            android:text="帧\u2000镜\u2000像:"
+            android:textColor="#666"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tv_label_video_mirror" />
+
+        <TextView
+            android:id="@+id/tv_frame_mirror_open"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:drawableStart="@drawable/c_radio_selector"
+            android:drawablePadding="4dp"
+            android:gravity="center_vertical"
+            android:text="开启\u3000"
+            android:textColor="#333"
+            app:layout_constraintBottom_toBottomOf="@id/tv_label_frame_mirror"
+            app:layout_constraintLeft_toRightOf="@id/tv_label_frame_mirror"
+            app:layout_constraintTop_toTopOf="@id/tv_label_frame_mirror" />
+
+        <TextView
+            android:id="@+id/tv_frame_mirror_close"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:drawableStart="@drawable/c_radio_selector"
+            android:drawablePadding="4dp"
+            android:gravity="center_vertical"
+            android:text="关闭\u3000"
+            android:textColor="#333"
+            app:layout_constraintBottom_toBottomOf="@id/tv_label_frame_mirror"
+            app:layout_constraintLeft_toRightOf="@id/tv_frame_mirror_open"
+            app:layout_constraintTop_toTopOf="@id/tv_label_frame_mirror" />
+
+        <!--帧旋转角度-->
+        <TextView
+            android:id="@+id/tv_label_frame_rotation"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_marginTop="12dp"
+            android:text="帧\u2000旋\u2000转:"
+            android:textColor="#666"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tv_label_frame_mirror" />
+
+        <TextView
+            android:id="@+id/tv_frame_rotation_0"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:drawableStart="@drawable/c_radio_selector"
+            android:drawablePadding="4dp"
+            android:gravity="center_vertical"
+            android:text="0°\u3000\u3000"
+            android:textColor="#333"
+            app:layout_constraintBottom_toBottomOf="@id/tv_label_frame_rotation"
+            app:layout_constraintLeft_toRightOf="@id/tv_label_frame_rotation"
+            app:layout_constraintTop_toTopOf="@id/tv_label_frame_rotation" />
+
+        <TextView
+            android:id="@+id/tv_frame_rotation_90"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:drawableStart="@drawable/c_radio_selector"
+            android:drawablePadding="4dp"
+            android:gravity="center_vertical"
+            android:text="90°\u3000\u2000"
+            android:textColor="#333"
+            app:layout_constraintBottom_toBottomOf="@id/tv_label_frame_rotation"
+            app:layout_constraintLeft_toRightOf="@id/tv_frame_rotation_0"
+            app:layout_constraintTop_toTopOf="@id/tv_label_frame_rotation" />
+
+        <TextView
+            android:id="@+id/tv_frame_rotation_180"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:drawableStart="@drawable/c_radio_selector"
+            android:drawablePadding="4dp"
+            android:gravity="center_vertical"
+            android:text="180°\u3000"
+            android:textColor="#333"
+            app:layout_constraintBottom_toBottomOf="@id/tv_label_frame_rotation"
+            app:layout_constraintLeft_toRightOf="@id/tv_frame_rotation_90"
+            app:layout_constraintTop_toTopOf="@id/tv_label_frame_rotation" />
+
+        <TextView
+            android:id="@+id/tv_frame_rotation_270"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:drawableStart="@drawable/c_radio_selector"
+            android:drawablePadding="4dp"
+            android:gravity="center_vertical"
+            android:text="270°\u3000"
+            android:textColor="#333"
+            app:layout_constraintBottom_toBottomOf="@id/tv_label_frame_rotation"
+            app:layout_constraintLeft_toRightOf="@id/tv_frame_rotation_180"
+            app:layout_constraintTop_toTopOf="@id/tv_label_frame_rotation" />
+
+        <!--镂空层-->
+        <TextView
+            android:id="@+id/tv_label_mask_shape"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_marginTop="12dp"
+            android:text="镂\u2000空\u2000层:"
+            android:textColor="#666"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tv_label_frame_rotation" />
+
+        <TextView
+            android:id="@+id/tv_mask_shape_none"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:drawableStart="@drawable/c_radio_selector"
+            android:drawablePadding="4dp"
+            android:gravity="center_vertical"
+            android:text="无\u3000\u3000"
+            android:textColor="#333"
+            app:layout_constraintBottom_toBottomOf="@id/tv_label_mask_shape"
+            app:layout_constraintLeft_toRightOf="@id/tv_label_mask_shape"
+            app:layout_constraintTop_toTopOf="@id/tv_label_mask_shape" />
+
+        <TextView
+            android:id="@+id/tv_mask_shape_circle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:drawableStart="@drawable/c_radio_selector"
+            android:drawablePadding="4dp"
+            android:gravity="center_vertical"
+            android:text="圆形\u3000"
+            android:textColor="#333"
+            app:layout_constraintBottom_toBottomOf="@id/tv_label_mask_shape"
+            app:layout_constraintLeft_toRightOf="@id/tv_mask_shape_none"
+            app:layout_constraintTop_toTopOf="@id/tv_label_mask_shape" />
+
+        <TextView
+            android:id="@+id/tv_mask_shape_square"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:drawableStart="@drawable/c_radio_selector"
+            android:drawablePadding="4dp"
+            android:gravity="center_vertical"
+            android:text="正方形"
+            android:textColor="#333"
+            app:layout_constraintBottom_toBottomOf="@id/tv_label_mask_shape"
+            app:layout_constraintLeft_toRightOf="@id/tv_mask_shape_circle"
+            app:layout_constraintTop_toTopOf="@id/tv_label_mask_shape" />
+
+        <TextView
+            android:id="@+id/tv_mask_shape_rectangle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:drawableStart="@drawable/c_radio_selector"
+            android:drawablePadding="4dp"
+            android:gravity="center_vertical"
+            android:text="长方形"
+            android:textColor="#333"
+            app:layout_constraintBottom_toBottomOf="@id/tv_label_mask_shape"
+            app:layout_constraintLeft_toRightOf="@id/tv_mask_shape_square"
+            app:layout_constraintTop_toTopOf="@id/tv_label_mask_shape" />
+
+        <TextView
+            android:id="@+id/tv_mask_shape_drawable"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:drawableStart="@drawable/c_radio_selector"
+            android:drawablePadding="4dp"
+            android:gravity="center_vertical"
+            android:text="人形\u3000"
+            android:textColor="#333"
+            app:layout_constraintLeft_toLeftOf="@id/tv_mask_shape_none"
+            app:layout_constraintTop_toBottomOf="@id/tv_mask_shape_none" />
+
+        <!--遮罩层镂空边缘-->
+        <TextView
+            android:id="@+id/tv_label_mask_edge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_marginTop="12dp"
+            android:text="镂空边缘:"
+            android:textColor="#666"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tv_mask_shape_drawable" />
+
+        <TextView
+            android:id="@+id/tv_mask_edge_none"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:drawableStart="@drawable/c_radio_selector"
+            android:drawablePadding="4dp"
+            android:gravity="center_vertical"
+            android:text="无\u3000\u3000"
+            android:textColor="#333"
+            app:layout_constraintBottom_toBottomOf="@id/tv_label_mask_edge"
+            app:layout_constraintLeft_toRightOf="@id/tv_label_mask_edge"
+            app:layout_constraintTop_toTopOf="@id/tv_label_mask_edge" />
+
+        <TextView
+            android:id="@+id/tv_mask_edge_default"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:drawableStart="@drawable/c_radio_selector"
+            android:drawablePadding="4dp"
+            android:gravity="center_vertical"
+            android:text="闭环\u3000"
+            android:textColor="#333"
+            app:layout_constraintBottom_toBottomOf="@id/tv_label_mask_edge"
+            app:layout_constraintLeft_toRightOf="@id/tv_mask_edge_none"
+            app:layout_constraintTop_toTopOf="@id/tv_label_mask_edge" />
+
+        <TextView
+            android:id="@+id/tv_mask_edge_angle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:drawableStart="@drawable/c_radio_selector"
+            android:drawablePadding="4dp"
+            android:gravity="center_vertical"
+            android:text="四角"
+            android:textColor="#333"
+            app:layout_constraintBottom_toBottomOf="@id/tv_label_mask_edge"
+            app:layout_constraintLeft_toRightOf="@id/tv_mask_edge_default"
+            app:layout_constraintTop_toTopOf="@id/tv_label_mask_edge" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
