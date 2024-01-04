@@ -24,10 +24,9 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import jsc.org.lib.camera.CameraConfiguration;
+import jsc.org.lib.camera.CameraConfig;
 import jsc.org.lib.camera.CameraFragment;
 import jsc.org.lib.camera.CameraMaskBuilder;
-import jsc.org.lib.camera.CameraParamsManager;
 import jsc.org.lib.camera.entry.YuvFrame;
 import jsc.org.lib.camera.utils.SoundPoolPlayer;
 import jsc.org.lib.camera.utils.YuvTransfer;
@@ -56,7 +55,6 @@ public class MainActivity extends BaseActivity {
                 outline.setRoundRect(0, 0, view.getWidth(), view.getHeight(), radius);
             }
         });
-        CameraParamsManager.getInstance().init(getApplicationContext());
         YuvTransfer.getInstance().init(getApplicationContext());
         SoundPoolPlayer.getInstance().register(getApplicationContext());
     }
@@ -66,6 +64,16 @@ public class MainActivity extends BaseActivity {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, 0x10);
         }
+    }
+
+    @Override
+    public void onBackPressed() {
+        Fragment f = getSupportFragmentManager().findFragmentByTag("_camera");
+        if (f != null) {
+            getSupportFragmentManager().beginTransaction().remove(f).commit();
+            return;
+        }
+        super.onBackPressed();
     }
 
     @Override
@@ -93,11 +101,12 @@ public class MainActivity extends BaseActivity {
 
     private void showCamera() {
         Bundle arguments = new Bundle();
-        arguments.putString("customCameraIdKey", getClass().getSimpleName());
-        arguments.putLong("previewDelayTime", 200);
-        arguments.putLong("frameDelayTime", 400);
-        arguments.putBoolean("withScanAnim", true);
-        arguments.putParcelable("config", new CameraConfiguration());
+        CameraConfig config = new CameraConfig();
+        config.cameraId = 1;
+        config.previewDelay = 200L;
+        config.frameCallbackDelay = 400L;
+        config.enableScanAnim = true;
+        arguments.putParcelable("config", config);
         CameraFragment fragment = new CameraFragment();
         fragment.setArguments(arguments);
         fragment.setCallback(new CameraFragment.CameraLifeCycleCallback() {
@@ -117,6 +126,11 @@ public class MainActivity extends BaseActivity {
 
             @Override
             public void notFoundCamera() {
+
+            }
+
+            @Override
+            public void onCameraSwitched(int cameraId) {
 
             }
 

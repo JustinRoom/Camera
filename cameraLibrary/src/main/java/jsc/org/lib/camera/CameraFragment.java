@@ -61,12 +61,11 @@ public class CameraFragment extends Fragment {
     private final CameraMaskBuilder mCameraMaskBuilder = new CameraMaskBuilder();
     private boolean initialized;
 
-    private String mCameraIdMode = "none";
     private Camera mCamera = null;
     private int mCameraId;
     private int mDisplayRotation;
     private int mFrameRotation;
-    private CameraConfiguration config = null;
+    private CameraConfig config = null;
     private int previewWidth = 0;
     private int previewHeight = 0;
     private int vw = 0;
@@ -101,8 +100,8 @@ public class CameraFragment extends Fragment {
     private final Camera.PreviewCallback previewCallback = new Camera.PreviewCallback() {
         @Override
         public void onPreviewFrame(byte[] yuvData, Camera camera) {
-            if (frameDelayTime > 0L && !frameDelayed) {
-                mHandler.sendEmptyMessageDelayed(MSG_ID_FRAME_DELAY, frameDelayTime);
+            if (config.frameCallbackDelay > 0L && !frameDelayed) {
+                mHandler.sendEmptyMessageDelayed(MSG_ID_FRAME_DELAY, config.frameCallbackDelay);
                 return;
             }
             lastFrame.nv21 = yuvData;
@@ -115,36 +114,17 @@ public class CameraFragment extends Fragment {
     };
 
     private boolean frameDelayed = false;//是否延迟时间返回帧
-    private long frameDelayTime = 0L;//延迟返回帧时间
 
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
-        String mCameraIdStr = null;
-        if (getArguments() != null) {
-            if (getArguments().containsKey("tempCameraId")) {
-                mCameraIdMode = "temp";
-                mCameraIdStr = getArguments().getString("tempCameraId");
-            } else if (getArguments().containsKey(CUSTOM_CAMERA_ID_KEY)) {
-                mCameraIdMode = "custom";
-                String key = getArguments().getString(CUSTOM_CAMERA_ID_KEY);
-                mCameraIdStr = CameraParamsManager.getInstance().getCustomCameraId(key);
-            }
-            if (getArguments().containsKey("frameDelayTime")) {
-                frameDelayTime = Math.max(getArguments().getLong("frameDelayTime"), 0L);
-            }
-            if (getArguments().containsKey("config")) {
-                config = getArguments().getParcelable("config");
-            }
+        if (getArguments() != null && getArguments().containsKey("config")) {
+            config = getArguments().getParcelable("config");
         }
-        if (TextUtils.isEmpty(mCameraIdStr)) {
-            mCameraIdMode = "none";
-            mCameraIdStr = CameraParamsManager.getInstance().getDefaultCameraId();
-        }
-        mCameraId = Integer.parseInt(mCameraIdStr);
         if (config == null) {
-            config = new CameraConfiguration();
+            config = new CameraConfig();
         }
+        mCameraId = config.cameraId;
     }
 
     private int backgroundColor() {
@@ -155,15 +135,6 @@ public class CameraFragment extends Fragment {
         View view = viewCache.get(viewKey);
         if (view != null) {
             view.setOnClickListener(l);
-        }
-    }
-
-    private void visible(String viewKey) {
-        View view = viewCache.get(viewKey);
-        if (view != null) {
-            boolean visible = getArguments() == null
-                    || getArguments().getBoolean(viewKey + "Visible", true);
-            view.setVisibility(visible ? View.VISIBLE : View.GONE);
         }
     }
 
@@ -329,7 +300,6 @@ public class CameraFragment extends Fragment {
             viewCache.put("scanner", view.findViewById(R.id.iv_scanner));
             viewCache.put("backPage", view.findViewById(R.id.tv_back_page));
             viewCache.put("subTitle", view.findViewById(R.id.tv_sub_title));
-            viewCache.put("cameraParams", view.findViewById(R.id.tv_camera_params));
             viewCache.put("solution", view.findViewById(R.id.tv_solution));
             viewCache.put("innerTips", view.findViewById(R.id.tv_inner_tips));
             viewCache.put("shutter", view.findViewById(R.id.iv_shutter));
@@ -403,12 +373,6 @@ public class CameraFragment extends Fragment {
             clickListen("maskEdgeNone", maskEdgeListener);
             clickListen("maskEdgeDefault", maskEdgeListener);
             clickListen("maskEdgeAngle", maskEdgeListener);
-
-            visible("mask");
-            visible("backPage");
-            visible("setting");
-            visible("solution");
-            visible("shutter");
 
             View switchView = viewCache.get("switch");
             assert switchView != null;
@@ -591,12 +555,8 @@ public class CameraFragment extends Fragment {
     private void switchCamera(final View v) {
         frameDelayed = false;
         mCameraId = 1 - mCameraId;
-        //如果需要，更新本地数据
-        if ("custom".equals(mCameraIdMode) && getArguments() != null) {
-            String key = getArguments().getString(CUSTOM_CAMERA_ID_KEY);
-            if (!TextUtils.isEmpty(key)) {
-                CameraParamsManager.getInstance().updateCustomCameraId(key, String.valueOf(mCameraId));
-            }
+        if (callback != null) {
+            callback.onCameraSwitched(mCameraId);
         }
         if (mHandler != null) {
             mHandler.removeMessages(MSG_ID_FOCUS);
@@ -674,7 +634,6 @@ public class CameraFragment extends Fragment {
     }
 
     private void initAndStartPreview(SurfaceTexture surface) {
-        long delay = getArguments() == null ? 0L : getArguments().getLong("previewDelayTime");
         //after open camera,waite a minute
         //getParameters() throw runtime exception maybe sometime.
         mHandler.postDelayed(new Runnable() {
@@ -690,7 +649,7 @@ public class CameraFragment extends Fragment {
                 startPreview();
                 autoFocus();
             }
-        }, delay);
+        }, config.previewDelay);
     }
 
     private void openCameraIfNot() {
@@ -1137,8 +1096,7 @@ public class CameraFragment extends Fragment {
             scannerView.setAnimation(null);
         }
         //update scanner container's visibility
-        boolean visible = getArguments() != null && getArguments().getBoolean("withScanAnim", false);
-        visible = visible && (mCameraMaskBuilder.isCircle() || mCameraMaskBuilder.isSquare() || mCameraMaskBuilder.isRectangle());
+        boolean visible = config.enableScanAnim && (mCameraMaskBuilder.isCircle() || mCameraMaskBuilder.isSquare() || mCameraMaskBuilder.isRectangle());
         scannerContainerView.setVisibility(visible ? View.VISIBLE : View.GONE);
         if (!visible) return;
 
@@ -1218,6 +1176,8 @@ public class CameraFragment extends Fragment {
          * No camera?<br> Not support?
          */
         void notFoundCamera();
+
+        void onCameraSwitched(int cameraId);
 
         void onBack();
 
