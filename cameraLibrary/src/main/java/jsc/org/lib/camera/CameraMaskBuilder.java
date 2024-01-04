@@ -5,6 +5,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.graphics.Path;
 import android.graphics.Point;
 import android.graphics.PointF;
 import android.graphics.PorterDuff;
@@ -334,17 +335,30 @@ public final class CameraMaskBuilder {
         PointF rt = new PointF(transparentRect.right + half, transparentRect.top - half);
         PointF lb = new PointF(transparentRect.left - half, transparentRect.bottom + half);
         PointF rb = new PointF(transparentRect.right + half, transparentRect.bottom + half);
+        Path path = new Path();
         //left top
-        canvas.drawLine(lt.x, lt.y, lt.x + aw, lt.y, paint);
-        canvas.drawLine(lt.x, lt.y, lt.x, lt.y + aw, paint);
+        path.reset();
+        path.moveTo(lt.x + aw, lt.y);
+        path.lineTo(lt.x, lt.y);
+        path.lineTo(lt.x, lt.y + aw);
+        canvas.drawPath(path, paint);
         //right top
-        canvas.drawLine(rt.x, rt.y, rt.x - aw, rt.y, paint);
-        canvas.drawLine(rt.x, rt.y, rt.x, rt.y + aw, paint);
+        path.reset();
+        path.moveTo(rt.x - aw, rt.y);
+        path.lineTo(rt.x, rt.y);
+        path.lineTo(rt.x, rt.y + aw);
+        canvas.drawPath(path, paint);
         //left bottom
-        canvas.drawLine(lb.x, lb.y, lb.x + aw, lb.y, paint);
-        canvas.drawLine(lb.x, lb.y, lb.x, lb.y - aw, paint);
+        path.reset();
+        path.moveTo(lb.x + aw, lb.y);
+        path.lineTo(lb.x, lb.y);
+        path.lineTo(lb.x, lb.y - aw);
+        canvas.drawPath(path, paint);
         //right bottom
-        canvas.drawLine(rb.x, rb.y, rb.x - aw, rb.y, paint);
-        canvas.drawLine(rb.x, rb.y, rb.x, rb.y - aw, paint);
+        path.reset();
+        path.moveTo(rb.x - aw, rb.y);
+        path.lineTo(rb.x, rb.y);
+        path.lineTo(rb.x, rb.y - aw);
+        canvas.drawPath(path, paint);
     }
 }
