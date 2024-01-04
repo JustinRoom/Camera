@@ -40,6 +40,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentActivity;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -63,9 +64,9 @@ public class CameraFragment extends Fragment {
     private String mCameraIdMode = "none";
     private Camera mCamera = null;
     private int mCameraId;
-    private int mVideoRotation;
+    private int mDisplayRotation;
     private int mFrameRotation;
-    private int mFrameMirror;
+    private CameraConfiguration config = null;
     private int previewWidth = 0;
     private int previewHeight = 0;
     private int vw = 0;
@@ -108,19 +109,17 @@ public class CameraFragment extends Fragment {
             lastFrame.width = previewWidth;
             lastFrame.height = previewHeight;
             if (!paused && callback != null) {
-                callback.frame(mCameraId, mFrameMirror == -1, mVideoRotation, mFrameRotation, yuvData, previewWidth, previewHeight);
+                callback.frame(mCameraId, mCameraId == Camera.CameraInfo.CAMERA_FACING_FRONT, mDisplayRotation, mFrameRotation, yuvData, previewWidth, previewHeight);
             }
         }
     };
 
-    private String screenDirection;
     private boolean frameDelayed = false;//是否延迟时间返回帧
     private long frameDelayTime = 0L;//延迟返回帧时间
 
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
-        screenDirection = isLandscape() ? CameraParamsManager.LAND : CameraParamsManager.PORT;
         String mCameraIdStr = null;
         if (getArguments() != null) {
             if (getArguments().containsKey("tempCameraId")) {
@@ -134,12 +133,18 @@ public class CameraFragment extends Fragment {
             if (getArguments().containsKey("frameDelayTime")) {
                 frameDelayTime = Math.max(getArguments().getLong("frameDelayTime"), 0L);
             }
+            if (getArguments().containsKey("config")) {
+                config = getArguments().getParcelable("config");
+            }
         }
         if (TextUtils.isEmpty(mCameraIdStr)) {
             mCameraIdMode = "none";
             mCameraIdStr = CameraParamsManager.getInstance().getDefaultCameraId();
         }
         mCameraId = Integer.parseInt(mCameraIdStr);
+        if (config == null) {
+            config = new CameraConfiguration();
+        }
     }
 
     private int backgroundColor() {
@@ -245,30 +250,6 @@ public class CameraFragment extends Fragment {
         }
     }
 
-    private void updateVideoRotationSelectedState(int videoRotation) {
-        selectedView("videoRotation0", videoRotation == 0);
-        selectedView("videoRotation90", videoRotation == 90);
-        selectedView("videoRotation180", videoRotation == 180);
-        selectedView("videoRotation270", videoRotation == 270);
-    }
-
-    private void updateVideoMirrorSelectedState(int value) {
-        selectedView("videoMirrorOpen", value == -1);
-        selectedView("videoMirrorClose", value == 1);
-    }
-
-    private void updateFrameMirrorSelectedState(int value) {
-        selectedView("frameMirrorOpen", value == -1);
-        selectedView("frameMirrorClose", value == 1);
-    }
-
-    private void updateFrameRotationSelectedState(int frameRotation) {
-        selectedView("frameRotation0", frameRotation == 0);
-        selectedView("frameRotation90", frameRotation == 90);
-        selectedView("frameRotation180", frameRotation == 180);
-        selectedView("frameRotation270", frameRotation == 270);
-    }
-
     private void updateMaskShapeSelectedState(int shape) {
         selectedView("maskShapeNone", shape == CameraMaskBuilder.SHAPE_NONE);
         selectedView("maskShapeCircle", shape == CameraMaskBuilder.SHAPE_CIRCLE);
@@ -358,18 +339,8 @@ public class CameraFragment extends Fragment {
             viewCache.put("setting", view.findViewById(R.id.iv_setting));
             viewCache.put("settingContainer", view.findViewById(R.id.cl_setting_container));
             viewCache.put("settingTitle", view.findViewById(R.id.tv_setting_title));
-            viewCache.put("videoRotation0", view.findViewById(R.id.tv_video_rotation_0));
-            viewCache.put("videoRotation90", view.findViewById(R.id.tv_video_rotation_90));
-            viewCache.put("videoRotation180", view.findViewById(R.id.tv_video_rotation_180));
-            viewCache.put("videoRotation270", view.findViewById(R.id.tv_video_rotation_270));
-            viewCache.put("videoMirrorOpen", view.findViewById(R.id.tv_video_mirror_open));
-            viewCache.put("videoMirrorClose", view.findViewById(R.id.tv_video_mirror_close));
-            viewCache.put("frameMirrorOpen", view.findViewById(R.id.tv_frame_mirror_open));
-            viewCache.put("frameMirrorClose", view.findViewById(R.id.tv_frame_mirror_close));
-            viewCache.put("frameRotation0", view.findViewById(R.id.tv_frame_rotation_0));
-            viewCache.put("frameRotation90", view.findViewById(R.id.tv_frame_rotation_90));
-            viewCache.put("frameRotation180", view.findViewById(R.id.tv_frame_rotation_180));
-            viewCache.put("frameRotation270", view.findViewById(R.id.tv_frame_rotation_270));
+            viewCache.put("videoRotation", view.findViewById(R.id.tv_value_video_rotation));
+            viewCache.put("frameRotation", view.findViewById(R.id.tv_value_frame_rotation));
             //mask
             viewCache.put("labelMaskShape", view.findViewById(R.id.tv_label_mask_shape));
             viewCache.put("maskShapeNone", view.findViewById(R.id.tv_mask_shape_none));
@@ -380,101 +351,6 @@ public class CameraFragment extends Fragment {
             viewCache.put("maskEdgeNone", view.findViewById(R.id.tv_mask_edge_none));
             viewCache.put("maskEdgeDefault", view.findViewById(R.id.tv_mask_edge_default));
             viewCache.put("maskEdgeAngle", view.findViewById(R.id.tv_mask_edge_angle));
-            final View.OnClickListener videoRotationListener = new View.OnClickListener() {
-
-                @Override
-                public void onClick(View v) {
-                    hideViewWithAnimation(viewCache.get("settingContainer"));
-                    if (v.isSelected()) return;
-                    int id = v.getId();
-                    int index = -1;
-                    if (id == R.id.tv_video_rotation_0) {
-                        index = 0;
-                    } else if (id == R.id.tv_video_rotation_90) {
-                        index = 1;
-                    } else if (id == R.id.tv_video_rotation_180) {
-                        index = 2;
-                    } else if (id == R.id.tv_video_rotation_270) {
-                        index = 3;
-                    }
-                    mVideoRotation = index * 90;
-                    CameraParamsManager.getInstance().updateVideoRotation(screenDirection, mVideoRotation);
-                    updateVideoRotationSelectedState(mVideoRotation);
-                    if (mCamera != null) {
-                        mCamera.setDisplayOrientation(calCameraDisplayOrientation(mVideoRotation));
-                    }
-                }
-            };
-            clickListen("videoRotation0", videoRotationListener);
-            clickListen("videoRotation90", videoRotationListener);
-            clickListen("videoRotation180", videoRotationListener);
-            clickListen("videoRotation270", videoRotationListener);
-            final View.OnClickListener videoMirrorListener = new View.OnClickListener() {
-
-                @Override
-                public void onClick(View v) {
-                    hideViewWithAnimation(viewCache.get("settingContainer"));
-                    if (v.isSelected()) return;
-                    int id = v.getId();
-                    int value = 0;
-                    if (id == R.id.tv_video_mirror_open) {
-                        value = -1;
-                    } else if (id == R.id.tv_video_mirror_close) {
-                        value = 1;
-                    }
-                    CameraParamsManager.getInstance().updateVideoMirror(String.valueOf(mCameraId), value);
-                    updateVideoMirrorSelectedState(value);
-                    ((TextureView) viewCache.get("display")).setScaleX(value);
-                }
-            };
-            clickListen("videoMirrorOpen", videoMirrorListener);
-            clickListen("videoMirrorClose", videoMirrorListener);
-            View.OnClickListener frameMirrorListener = new View.OnClickListener() {
-
-                @Override
-                public void onClick(View v) {
-                    hideViewWithAnimation(viewCache.get("settingContainer"));
-                    if (v.isSelected()) return;
-                    int id = v.getId();
-                    int value = 0;
-                    if (id == R.id.tv_frame_mirror_open) {
-                        value = -1;
-                    } else if (id == R.id.tv_frame_mirror_close) {
-                        value = 1;
-                    }
-                    mFrameMirror = value;
-                    CameraParamsManager.getInstance().updateFrameMirror(String.valueOf(mCameraId), value);
-                    updateFrameMirrorSelectedState(value);
-                }
-            };
-            clickListen("frameMirrorOpen", frameMirrorListener);
-            clickListen("frameMirrorClose", frameMirrorListener);
-            View.OnClickListener frameRotationListener = new View.OnClickListener() {
-
-                @Override
-                public void onClick(View v) {
-                    hideViewWithAnimation(viewCache.get("settingContainer"));
-                    if (v.isSelected()) return;
-                    int id = v.getId();
-                    int index = -1;
-                    if (id == R.id.tv_frame_rotation_0) {
-                        index = 0;
-                    } else if (id == R.id.tv_frame_rotation_90) {
-                        index = 1;
-                    } else if (id == R.id.tv_frame_rotation_180) {
-                        index = 2;
-                    } else if (id == R.id.tv_frame_rotation_270) {
-                        index = 3;
-                    }
-                    mFrameRotation = index * 90;
-                    CameraParamsManager.getInstance().updateFrameRotation(screenDirection, String.valueOf(mCameraId), mFrameRotation);
-                    updateFrameRotationSelectedState(mFrameRotation);
-                }
-            };
-            clickListen("frameRotation0", frameRotationListener);
-            clickListen("frameRotation90", frameRotationListener);
-            clickListen("frameRotation180", frameRotationListener);
-            clickListen("frameRotation270", frameRotationListener);
             View.OnClickListener maskShapeListener = new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -675,8 +551,12 @@ public class CameraFragment extends Fragment {
     public void onPause() {
         super.onPause();
         paused = true;
-        if (mCamera != null) {
-            mCamera.stopPreview();
+        try {
+            if (mCamera != null) {
+                mCamera.stopPreview();
+            }
+        } catch (RuntimeException e) {
+            e.printStackTrace();
         }
         frameDelayed = false;
     }
@@ -685,8 +565,12 @@ public class CameraFragment extends Fragment {
     public void onResume() {
         super.onResume();
         paused = false;
-        if (mCamera != null) {
-            mCamera.startPreview();
+        try {
+            if (mCamera != null) {
+                mCamera.startPreview();
+            }
+        } catch (RuntimeException e) {
+            e.printStackTrace();
         }
     }
 
@@ -743,7 +627,7 @@ public class CameraFragment extends Fragment {
         }
         stopPreview();
         if (callback != null) {
-            callback.onShutter(mCameraId, mVideoRotation, mFrameRotation, lastFrame.nv21, lastFrame.width, lastFrame.height);
+            callback.onShutter(mCameraId, mDisplayRotation, mFrameRotation, lastFrame.nv21, lastFrame.width, lastFrame.height);
         }
         startPreview();
         //restart the scan animation
@@ -825,16 +709,11 @@ public class CameraFragment extends Fragment {
             return;
         }
         mCamera = Camera.open(mCameraId);
-        mVideoRotation = CameraParamsManager.getInstance().getVideoRotation(screenDirection);
-        mFrameRotation = CameraParamsManager.getInstance().getFrameRotation(screenDirection, String.valueOf(mCameraId));
         ((TextView) viewCache.get("settingTitle")).setText(mCameraId == Camera.CameraInfo.CAMERA_FACING_FRONT ? "设置：前置摄像头" : "设置：后置摄像头");
-        updateVideoRotationSelectedState(mVideoRotation);
-        updateVideoMirrorSelectedState(CameraParamsManager.getInstance().getVideoMirror(String.valueOf(mCameraId)));
-        mFrameMirror = CameraParamsManager.getInstance().getFrameMirror(String.valueOf(mCameraId));
-        updateFrameMirrorSelectedState(mFrameMirror);
-        updateFrameRotationSelectedState(mFrameRotation);
-        ((TextureView) viewCache.get("display")).setScaleX(CameraParamsManager.getInstance().getVideoMirror(String.valueOf(mCameraId)));
-        mCamera.setDisplayOrientation(calCameraDisplayOrientation(mVideoRotation));
+        mDisplayRotation = calCameraDisplayOrientation2(mCameraId == Camera.CameraInfo.CAMERA_FACING_FRONT ? config.frontExtraDisplayOri : config.backgroundExtraDisplayOri);
+        text("videoRotation", false, mDisplayRotation + "°");
+        text("frameRotation", false, mFrameRotation + "°");
+        mCamera.setDisplayOrientation(mDisplayRotation);
     }
 
     private void showOpenCameraFailedDialog(String message, String reason) {
@@ -950,29 +829,26 @@ public class CameraFragment extends Fragment {
         }
     }
 
-    private int calCameraDisplayOrientation(int mVideoRotation) {
+    private int calCameraDisplayOrientation2(int additionalRotation) {
+        FragmentActivity activity = getActivity();
+        int rotation = activity == null ? 0 : activity.getWindowManager().getDefaultDisplay().getRotation();
+        int degrees = rotation * 90;
+        additionalRotation /= 90;
+        additionalRotation *= 90;
+        int angle = degrees + additionalRotation;
+        int result;
         Camera.CameraInfo info = new Camera.CameraInfo();
         Camera.getCameraInfo(mCameraId, info);
-        int result = 0;
         if (info.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
-            result = (info.orientation + mVideoRotation) % 360;
+            result = (info.orientation + angle) % 360;
             result = (360 - result) % 360;
+
+            mFrameRotation = (info.orientation + degrees) % 360;
+            mFrameRotation = (360 - mFrameRotation) % 360;
         } else {
-            result = (info.orientation + 360 - mVideoRotation) % 360;
+            result = (info.orientation - angle + 360) % 360;
+            mFrameRotation = (info.orientation - degrees + 360) % 360;
         }
-        text("cameraParams",
-                false,
-                new StringBuilder()
-                        .append("摄\u2000像\u2000头:").append(mCameraId == Camera.CameraInfo.CAMERA_FACING_FRONT ? "前置" : "后置")
-                        .append("\n")
-                        .append("相机旋转:")
-                        .append(info.orientation)
-                        .append("\n")
-                        .append("视频旋转:")
-                        .append(result)
-                        .append("\n")
-                        .append("帧\u2000旋\u2000转:")
-                        .append(mFrameRotation));
         return result;
     }
 
@@ -1364,28 +1240,26 @@ public class CameraFragment extends Fragment {
 
         /**
          * Every frame call back.
-         *
-         * @param facing
+         * @param cameraId
          * @param mirror
-         * @param mVideoOrientation
-         * @param mFrameOrientation
+         * @param mDisplayRotation
+         * @param mFrameRotation
          * @param yuvData           frame data-nv21 format
          * @param width             frame width
          * @param height            frame height
          */
-        void frame(int facing, boolean mirror, int mVideoOrientation, int mFrameOrientation, byte[] yuvData, int width, int height);
+        void frame(int cameraId, boolean mirror, int mDisplayRotation, int mFrameRotation, byte[] yuvData, int width, int height);
 
         /**
          * Every frame call back.
-         *
-         * @param facing
-         * @param displayOrientation
-         * @param mFrameOrientation
+         * @param cameraId
+         * @param mDisplayRotation
+         * @param mFrameRotation
          * @param yuvData            frame data-nv21 format
          * @param width              frame width
          * @param height             frame height
          */
-        void onShutter(int facing, int displayOrientation, int mFrameOrientation, byte[] yuvData, int width, int height);
+        void onShutter(int cameraId, int mDisplayRotation, int mFrameRotation, byte[] yuvData, int width, int height);
 
         /**
          * Call back after closing camera.

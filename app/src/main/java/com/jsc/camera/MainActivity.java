@@ -6,6 +6,7 @@ import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Outline;
 import android.graphics.Rect;
+import android.hardware.Camera;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -23,6 +24,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import jsc.org.lib.camera.CameraConfiguration;
 import jsc.org.lib.camera.CameraFragment;
 import jsc.org.lib.camera.CameraMaskBuilder;
 import jsc.org.lib.camera.CameraParamsManager;
@@ -84,6 +86,8 @@ public class MainActivity extends BaseActivity {
     private boolean processing = false;
     private final Rect mValidRect = new Rect();
     private final YuvFrame mFrameCache = new YuvFrame();
+    private final YuvFrame mFrameResult = new YuvFrame();
+    private byte[] yuvResult = null;
     private final ExecutorService mService = Executors.newSingleThreadExecutor();
     private final Handler mHandler = new Handler(Looper.getMainLooper());
 
@@ -93,6 +97,7 @@ public class MainActivity extends BaseActivity {
         arguments.putLong("previewDelayTime", 200);
         arguments.putLong("frameDelayTime", 400);
         arguments.putBoolean("withScanAnim", true);
+        arguments.putParcelable("config", new CameraConfiguration());
         CameraFragment fragment = new CameraFragment();
         fragment.setArguments(arguments);
         fragment.setCallback(new CameraFragment.CameraLifeCycleCallback() {
@@ -135,26 +140,42 @@ public class MainActivity extends BaseActivity {
             }
 
             @Override
-            public void frame(int facing, boolean mirror, int mVideoOrientation, int mFrameOrientation, byte[] yuvData, int width, int height) {
+            public void frame(int cameraId, boolean mirror, int mDisplayRotation, int mFrameRotation, byte[] yuvData, int width, int height) {
 
             }
 
             @Override
-            public void onShutter(int facing, int displayOrientation, int mFrameOrientation, byte[] yuvData, int width, int height) {
+            public void onShutter(int cameraId, int mDisplayRotation, int mFrameRotation, byte[] yuvData, int width, int height) {
                 if (!processing) {
-                    SoundPoolPlayer.getInstance().playShutterVoice();
                     processing = true;
-                    mFrameCache.facing = facing;
-                    mFrameCache.yuvData = yuvData;
+                    SoundPoolPlayer.getInstance().playShutterVoice();
+                    mFrameCache.facing = cameraId;
                     mFrameCache.width = width;
                     mFrameCache.height = height;
+                    mFrameCache.frameRotation = mFrameRotation;
                     mFrameCache.clipRect = new Rect(mValidRect);
-                    mFrameCache.frameRotation = mFrameOrientation;
+                    mFrameCache.mirror = cameraId;
+                    if (mFrameCache.yuvData == null || mFrameCache.yuvData.length != yuvData.length) {
+                        mFrameCache.yuvData = new byte[yuvData.length];
+                    }
+                    System.arraycopy(yuvData, 0, mFrameCache.yuvData, 0, yuvData.length);
                     mService.submit(new Runnable() {
                         @Override
                         public void run() {
-                            YuvUtils.dealOriginalFrameIfN(mFrameCache, false);
-                            bitmap = YuvTransfer.getInstance().transfer(mFrameCache);
+                            if (yuvResult == null || yuvResult.length != mFrameCache.yuvData.length) {
+                                yuvResult = new byte[mFrameCache.yuvData.length];
+                            }
+                            if (mFrameCache.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
+                                YuvUtils.mirrorYuv420(mFrameCache.yuvData, mFrameCache.width, mFrameCache.height);
+                            }
+                            YuvUtils.rotateYuv420(mFrameCache.yuvData, mFrameCache.width, mFrameCache.height, mFrameCache.frameRotation, yuvResult);
+                            boolean interchanged = (mFrameCache.frameRotation / 90) % 2 == 1;
+                            if (interchanged) {
+                                YuvUtils.clipYuv420(yuvResult, mFrameCache.height, mFrameCache.width, mFrameCache.clipRect, mFrameResult);
+                            } else {
+                                YuvUtils.clipYuv420(yuvResult, mFrameCache.width, mFrameCache.height, mFrameCache.clipRect, mFrameResult);
+                            }
+                            bitmap = YuvTransfer.getInstance().transfer(mFrameResult);
                             mHandler.post(new Runnable() {
                                 @Override
                                 public void run() {
