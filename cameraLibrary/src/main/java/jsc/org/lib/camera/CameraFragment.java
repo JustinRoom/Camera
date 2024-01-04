@@ -20,7 +20,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
-import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.TextureView;
@@ -55,7 +54,6 @@ public class CameraFragment extends Fragment {
 
     private final static int MSG_ID_FOCUS = 0x6665;
     private final static int MSG_ID_FRAME_DELAY = 0x6666;
-    private final String CUSTOM_CAMERA_ID_KEY = "customCameraIdKey";
     private final String TAG = getClass().getSimpleName();
     private final Map<String, View> viewCache = new HashMap<>();
     private final CameraMaskBuilder mCameraMaskBuilder = new CameraMaskBuilder();
@@ -138,15 +136,13 @@ public class CameraFragment extends Fragment {
         }
     }
 
-    private void resize(String viewKey, int width, int height, boolean invalidateImmediately) {
+    private void resize(String viewKey, int width, int height) {
         View view = viewCache.get(viewKey);
         if (view != null) {
             ViewGroup.LayoutParams params = view.getLayoutParams();
             params.width = width;
             params.height = height;
-            if (invalidateImmediately) {
-                view.setLayoutParams(params);
-            }
+            view.setLayoutParams(params);
         }
     }
 
@@ -394,12 +390,12 @@ public class CameraFragment extends Fragment {
             wm.getDefaultDisplay().getRealSize(outSize);
             int size0 = Math.min(outSize.x, outSize.y) / 10;
             size0 = size0 / 2 * 2;
-            resize("flashTorch", size0, size0, true);
-            resize("switch", size0, size0, true);
-            resize("setting", size0, size0, true);
+            resize("flashTorch", size0, size0);
+            resize("switch", size0, size0);
+            resize("setting", size0, size0);
             int size1 = Math.min(outSize.x, outSize.y) * 3 / 20;
             size1 = size1 / 2 * 2;
-            resize("shutter", size1, size1, true);
+            resize("shutter", size1, size1);
 
             View.OnClickListener l = new View.OnClickListener() {
                 @Override
@@ -1064,8 +1060,8 @@ public class CameraFragment extends Fragment {
         int multi = Math.min(multi0, multi1);
         int tvw = mRatio.width * multi;
         int tvh = mRatio.height * multi;
-        resize("display", tvw, tvh, true);
-        resize("mask", tvw, tvh, true);
+        resize("display", tvw, tvh);
+        resize("mask", tvw, tvh);
         mCameraMaskBuilder.frameSize(previewWidth, previewHeight);
         mCameraMaskBuilder.viewSize(tvw, tvh);
         updateMaskShapeSelectedState(mCameraMaskBuilder.maskShape);
