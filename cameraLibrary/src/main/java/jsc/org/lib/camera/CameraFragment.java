@@ -105,7 +105,7 @@ public class CameraFragment extends Fragment {
             lastFrame.width = previewWidth;
             lastFrame.height = previewHeight;
             if (!paused && callback != null) {
-                callback.frame(mCameraId, mCameraId == Camera.CameraInfo.CAMERA_FACING_FRONT, mDisplayRotation, mDisplayRotation, yuvData, previewWidth, previewHeight);
+                callback.frame(mCameraId, mCameraId == Camera.CameraInfo.CAMERA_FACING_FRONT, mDisplayRotation, yuvData, previewWidth, previewHeight);
             }
         }
     };
@@ -582,7 +582,7 @@ public class CameraFragment extends Fragment {
         }
         stopPreview();
         if (callback != null) {
-            callback.onShutter(mCameraId, mDisplayRotation, mDisplayRotation, lastFrame.nv21, lastFrame.width, lastFrame.height);
+            callback.onShutter(mCameraId, mDisplayRotation, lastFrame.nv21, lastFrame.width, lastFrame.height);
         }
         startPreview();
         //restart the scan animation
@@ -1193,24 +1193,22 @@ public class CameraFragment extends Fragment {
          * Every frame call back.
          * @param cameraId
          * @param mirror
-         * @param mDisplayRotation
-         * @param mFrameRotation
+         * @param rotation
          * @param yuvData           frame data-nv21 format
          * @param width             frame width
          * @param height            frame height
          */
-        void frame(int cameraId, boolean mirror, int mDisplayRotation, int mFrameRotation, byte[] yuvData, int width, int height);
+        void frame(int cameraId, boolean mirror, int rotation, byte[] yuvData, int width, int height);
 
         /**
          * Every frame call back.
          * @param cameraId
-         * @param mDisplayRotation
-         * @param mFrameRotation
+         * @param rotation
          * @param yuvData            frame data-nv21 format
          * @param width              frame width
          * @param height             frame height
          */
-        void onShutter(int cameraId, int mDisplayRotation, int mFrameRotation, byte[] yuvData, int width, int height);
+        void onShutter(int cameraId, int rotation, byte[] yuvData, int width, int height);
 
         /**
          * Call back after closing camera.

@@ -156,19 +156,19 @@ public class MainActivity extends BaseActivity {
             }
 
             @Override
-            public void frame(int cameraId, boolean mirror, int mDisplayRotation, int mFrameRotation, byte[] yuvData, int width, int height) {
+            public void frame(int cameraId, boolean mirror, int rotation, byte[] yuvData, int width, int height) {
 
             }
 
             @Override
-            public void onShutter(int cameraId, int mDisplayRotation, int mFrameRotation, byte[] yuvData, int width, int height) {
+            public void onShutter(int cameraId, int rotation, byte[] yuvData, int width, int height) {
                 if (!processing) {
                     processing = true;
                     SoundPoolPlayer.getInstance().playShutterVoice();
                     mFrameCache.facing = cameraId;
                     mFrameCache.width = width;
                     mFrameCache.height = height;
-                    mFrameCache.frameRotation = mFrameRotation;
+                    mFrameCache.frameRotation = rotation;
                     mFrameCache.clipRect = new Rect(mValidRect);
                     mFrameCache.mirror = cameraId;
                     if (mFrameCache.yuvData == null || mFrameCache.yuvData.length != yuvData.length) {
