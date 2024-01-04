@@ -18,18 +18,21 @@ CameraParamsManager.getInstance().init(getApplicationContext());
     private boolean processing = false;
     private final Rect mValidRect = new Rect();
     private final YuvFrame mFrameCache = new YuvFrame();
+    private final YuvFrame mFrameResult = new YuvFrame();
+    private byte[] yuvResult = null;
     private final ExecutorService mService = Executors.newSingleThreadExecutor();
     private final Handler mHandler = new Handler(Looper.getMainLooper());
 
     private void showCamera() {
         Bundle arguments = new Bundle();
-        arguments.putString("customCameraIdKey", getClass().getSimpleName());
-        //预览延迟时间，单位：毫秒
-        arguments.putLong("previewDelayTime", 200);
-        //相机帧回调延迟时间，单位：毫秒
-        arguments.putLong("frameDelayTime", 400);
-        //是否启用扫描动画
-        arguments.putBoolean("withScanAnim", true);
+        CameraConfig config = new CameraConfig();
+        config.cameraId = 0;
+        config.frontExtraDisplayOri = 0;
+        config.backgroundExtraDisplayOri = 0;
+        config.previewDelay = 200L;
+        config.frameCallbackDelay = 400L;
+        config.enableScanAnim = true;
+        arguments.putParcelable("config", config);
         CameraFragment fragment = new CameraFragment();
         fragment.setArguments(arguments);
         fragment.setCallback(new CameraFragment.CameraLifeCycleCallback() {
@@ -53,6 +56,11 @@ CameraParamsManager.getInstance().init(getApplicationContext());
             }
 
             @Override
+            public void onCameraSwitched(int cameraId) {
+
+            }
+
+            @Override
             public void onBack() {
                 //这里是点击控件"backPage"回调
                 Fragment f = getSupportFragmentManager().findFragmentByTag("_camera");
@@ -63,7 +71,7 @@ CameraParamsManager.getInstance().init(getApplicationContext());
 
             @Override
             public void onCreateMask(boolean isLandscape, CameraMaskBuilder builder) {
-                //这里可以配置镂空区域形状、参数等
+
             }
 
             @Override
@@ -72,28 +80,43 @@ CameraParamsManager.getInstance().init(getApplicationContext());
             }
 
             @Override
-            public void frame(int facing, boolean mirror, int mVideoOrientation, int mFrameOrientation, byte[] yuvData, int width, int height) {
-                //这里是相机回调回来的每一帧
+            public void frame(int cameraId, boolean mirror, int rotation, byte[] yuvData, int width, int height) {
+
             }
 
             @Override
-            public void onShutter(int facing, int displayOrientation, int mFrameOrientation, byte[] yuvData, int width, int height) {
-                //这里是点击拍照按钮后回调帧
+            public void onShutter(int cameraId, int rotation, byte[] yuvData, int width, int height) {
                 if (!processing) {
-                    SoundPoolPlayer.getInstance().playShutterVoice();
                     processing = true;
-                    mFrameCache.facing = facing;
-                    mFrameCache.yuvData = yuvData;
+                    SoundPoolPlayer.getInstance().playShutterVoice();
+                    mFrameCache.facing = cameraId;
                     mFrameCache.width = width;
                     mFrameCache.height = height;
+                    mFrameCache.frameRotation = rotation;
                     mFrameCache.clipRect = new Rect(mValidRect);
-                    mFrameCache.frameRotation = mFrameOrientation;
+                    mFrameCache.mirror = cameraId;
+                    if (mFrameCache.yuvData == null || mFrameCache.yuvData.length != yuvData.length) {
+                        mFrameCache.yuvData = new byte[yuvData.length];
+                    }
+                    System.arraycopy(yuvData, 0, mFrameCache.yuvData, 0, yuvData.length);
                     mService.submit(new Runnable() {
                         @Override
                         public void run() {
-                            //处理帧：旋转、裁剪
-                            YuvUtils.dealOriginalFrameIfN(mFrameCache, false);
-                            bitmap = YuvTransfer.getInstance().transfer(mFrameCache);
+                            if (yuvResult == null || yuvResult.length != mFrameCache.yuvData.length) {
+                                yuvResult = new byte[mFrameCache.yuvData.length];
+                            }
+                            //前置摄像头需要镜像
+                            if (mFrameCache.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
+                                YuvUtils.mirrorYuv420(mFrameCache.yuvData, mFrameCache.width, mFrameCache.height);
+                            }
+                            YuvUtils.rotateYuv420(mFrameCache.yuvData, mFrameCache.width, mFrameCache.height, mFrameCache.frameRotation, yuvResult);
+                            boolean interchanged = (mFrameCache.frameRotation / 90) % 2 == 1;
+                            if (interchanged) {
+                                YuvUtils.clipYuv420(yuvResult, mFrameCache.height, mFrameCache.width, mFrameCache.clipRect, mFrameResult);
+                            } else {
+                                YuvUtils.clipYuv420(yuvResult, mFrameCache.width, mFrameCache.height, mFrameCache.clipRect, mFrameResult);
+                            }
+                            bitmap = YuvTransfer.getInstance().transfer(mFrameResult);
                             mHandler.post(new Runnable() {
                                 @Override
                                 public void run() {
