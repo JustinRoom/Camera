@@ -62,7 +62,6 @@ public class CameraFragment extends Fragment {
     private Camera mCamera = null;
     private int mCameraId;
     private int mDisplayRotation;
-    private int mFrameRotation;
     private CameraConfig config = null;
     private int previewWidth = 0;
     private int previewHeight = 0;
@@ -106,7 +105,7 @@ public class CameraFragment extends Fragment {
             lastFrame.width = previewWidth;
             lastFrame.height = previewHeight;
             if (!paused && callback != null) {
-                callback.frame(mCameraId, mCameraId == Camera.CameraInfo.CAMERA_FACING_FRONT, mDisplayRotation, mFrameRotation, yuvData, previewWidth, previewHeight);
+                callback.frame(mCameraId, mCameraId == Camera.CameraInfo.CAMERA_FACING_FRONT, mDisplayRotation, mDisplayRotation, yuvData, previewWidth, previewHeight);
             }
         }
     };
@@ -388,12 +387,12 @@ public class CameraFragment extends Fragment {
             Point outSize = new Point();
             WindowManager wm = (WindowManager) view.getContext().getSystemService(Context.WINDOW_SERVICE);
             wm.getDefaultDisplay().getRealSize(outSize);
-            int size0 = Math.min(outSize.x, outSize.y) / 10;
+            int size0 = Math.min(outSize.x, outSize.y) / 15;
             size0 = size0 / 2 * 2;
             resize("flashTorch", size0, size0);
             resize("switch", size0, size0);
             resize("setting", size0, size0);
-            int size1 = Math.min(outSize.x, outSize.y) * 3 / 20;
+            int size1 = Math.min(outSize.x, outSize.y) / 10;
             size1 = size1 / 2 * 2;
             resize("shutter", size1, size1);
 
@@ -583,7 +582,7 @@ public class CameraFragment extends Fragment {
         }
         stopPreview();
         if (callback != null) {
-            callback.onShutter(mCameraId, mDisplayRotation, mFrameRotation, lastFrame.nv21, lastFrame.width, lastFrame.height);
+            callback.onShutter(mCameraId, mDisplayRotation, mDisplayRotation, lastFrame.nv21, lastFrame.width, lastFrame.height);
         }
         startPreview();
         //restart the scan animation
@@ -667,7 +666,7 @@ public class CameraFragment extends Fragment {
         ((TextView) viewCache.get("settingTitle")).setText(mCameraId == Camera.CameraInfo.CAMERA_FACING_FRONT ? "设置：前置摄像头" : "设置：后置摄像头");
         mDisplayRotation = calCameraDisplayOrientation2(mCameraId == Camera.CameraInfo.CAMERA_FACING_FRONT ? config.frontExtraDisplayOri : config.backgroundExtraDisplayOri);
         text("videoRotation", false, mDisplayRotation + "°");
-        text("frameRotation", false, mFrameRotation + "°");
+        text("frameRotation", false, mDisplayRotation + "°");
         mCamera.setDisplayOrientation(mDisplayRotation);
     }
 
@@ -797,12 +796,8 @@ public class CameraFragment extends Fragment {
         if (info.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
             result = (info.orientation + angle) % 360;
             result = (360 - result) % 360;
-
-            mFrameRotation = (info.orientation + degrees) % 360;
-            mFrameRotation = (360 - mFrameRotation) % 360;
         } else {
             result = (info.orientation - angle + 360) % 360;
-            mFrameRotation = (info.orientation - degrees + 360) % 360;
         }
         return result;
     }
