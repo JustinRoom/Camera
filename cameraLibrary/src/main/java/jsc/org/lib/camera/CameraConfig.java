@@ -2,6 +2,7 @@ package jsc.org.lib.camera;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.util.Size;
 
 public final class CameraConfig implements Parcelable {
 
@@ -17,6 +18,10 @@ public final class CameraConfig implements Parcelable {
     public long frameCallbackDelay = 0L;
     /**是否开启扫码动画:1->开启*/
     public boolean enableScanAnim = false;
+    /**指定相机分辨率:宽*/
+    public int previewWidth;
+    /**指定相机分辨率:高*/
+    public int previewHeight;
 
     public CameraConfig() {
     }
@@ -28,6 +33,8 @@ public final class CameraConfig implements Parcelable {
         previewDelay = in.readLong();
         frameCallbackDelay = in.readLong();
         enableScanAnim = in.readInt() == 1;
+        previewWidth = in.readInt();
+        previewHeight = in.readInt();
     }
 
     @Override
@@ -38,6 +45,8 @@ public final class CameraConfig implements Parcelable {
         dest.writeLong(previewDelay);
         dest.writeLong(frameCallbackDelay);
         dest.writeInt(enableScanAnim ? 1 : 0);
+        dest.writeInt(previewWidth);
+        dest.writeInt(previewHeight);
     }
 
     @Override

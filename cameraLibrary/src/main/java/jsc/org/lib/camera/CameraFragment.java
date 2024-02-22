@@ -471,14 +471,19 @@ public class CameraFragment extends Fragment {
                 public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
                     closeCamera();
                     //clear message queue
-                    mHandler.removeMessages(MSG_ID_FOCUS);
-                    mHandler.removeMessages(MSG_ID_FRAME_DELAY);
+                    mHandler.removeCallbacksAndMessages(null);
                     return true;
                 }
 
                 @Override
                 public void onSurfaceTextureUpdated(SurfaceTexture surface) {
 
+                }
+            });
+            viewCache.get("display").setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    sendAutoFocusMessage(30L);
                 }
             });
             if (callback != null) {
@@ -712,9 +717,32 @@ public class CameraFragment extends Fragment {
 
         parameters.setRecordingHint(false);
         parameters.setPreviewFormat(ImageFormat.NV21);
-        Camera.Size size = isLandscape() ? getBestLandscapeSupportedSize(parameters.getSupportedPreviewSizes(), vw, vh)
-                : getBestPortraitSupportedSize(parameters.getSupportedPreviewSizes(), vw, vh);
-        if (size == null) {
+        Camera.Size target = null;
+        if (config.previewWidth > 0 && config.previewHeight > 0) {
+            for (Camera.Size size : parameters.getSupportedPreviewSizes()) {
+                if (config.previewWidth == size.width && config.previewHeight == size.height) {
+                    target = size;
+                    break;
+                }
+            }
+            if (target != null) {
+                if (target.width * 9 == target.height * 16) {
+                    mRatio = isLandscape() ? new VideoRatio(16, 9) : new VideoRatio(9, 16);
+                } else if (target.width * 3 == target.height * 4) {
+                    mRatio = isLandscape() ? new VideoRatio(4, 3) : new VideoRatio(3, 4);
+                } else if (target.width == target.height) {
+                    mRatio = new VideoRatio(1, 1);
+                } else {
+                    //不支持的分辨率比例
+                    target = null;
+                }
+            }
+        }
+        if (target == null) {
+            target = isLandscape() ? getBestLandscapeSupportedSize(parameters.getSupportedPreviewSizes(), vw, vh)
+                    : getBestPortraitSupportedSize(parameters.getSupportedPreviewSizes(), vw, vh);
+        }
+        if (target == null) {
             //didn't find the suitable preview size
             //tell user not support.
             mCamera.release();
@@ -727,8 +755,8 @@ public class CameraFragment extends Fragment {
                     .show();
             return;
         }
-        previewWidth = size.width;
-        previewHeight = size.height;
+        previewWidth = target.width;
+        previewHeight = target.height;
         parameters.setPreviewSize(previewWidth, previewHeight);
         //对焦模式设置
         List<String> supportedFocusModes = parameters.getSupportedFocusModes();
@@ -879,8 +907,6 @@ public class CameraFragment extends Fragment {
             if (tempList.size() == 0) continue;
             return latestSupportedSize(tempList);
         }
-
-        mRatio = null;
         return null;
     }
 
@@ -961,8 +987,6 @@ public class CameraFragment extends Fragment {
             if (tempList.size() == 0) continue;
             return latestSupportedSize(tempList);
         }
-
-        mRatio = null;
         return null;
     }
 
@@ -1191,22 +1215,24 @@ public class CameraFragment extends Fragment {
 
         /**
          * Every frame call back.
+         *
          * @param cameraId
          * @param mirror
          * @param rotation
-         * @param yuvData           frame data-nv21 format
-         * @param width             frame width
-         * @param height            frame height
+         * @param yuvData  frame data-nv21 format
+         * @param width    frame width
+         * @param height   frame height
          */
         void frame(int cameraId, boolean mirror, int rotation, byte[] yuvData, int width, int height);
 
         /**
          * Every frame call back.
+         *
          * @param cameraId
          * @param rotation
-         * @param yuvData            frame data-nv21 format
-         * @param width              frame width
-         * @param height             frame height
+         * @param yuvData  frame data-nv21 format
+         * @param width    frame width
+         * @param height   frame height
          */
         void onShutter(int cameraId, int rotation, byte[] yuvData, int width, int height);
 

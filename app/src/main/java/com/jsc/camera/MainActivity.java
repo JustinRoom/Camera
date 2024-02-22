@@ -103,8 +103,10 @@ public class MainActivity extends BaseActivity {
         Bundle arguments = new Bundle();
         CameraConfig config = new CameraConfig();
         config.cameraId = 0;
-        config.frontExtraDisplayOri = 270;
-        config.backgroundExtraDisplayOri = 270;
+        config.frontExtraDisplayOri = 0;
+        config.backgroundExtraDisplayOri = 0;
+        config.previewWidth = 720;
+        config.previewHeight = 720;
         config.previewDelay = 200L;
         config.frameCallbackDelay = 400L;
         config.enableScanAnim = true;
