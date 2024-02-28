@@ -15,3 +15,5 @@ dependencyResolutionManagement {
 rootProject.name = "Camera"
 include ':app'
 include ':cameraLibrary'
+include ':basicLibrary'
+project(':basicLibrary').projectDir = new File('../Basic/basicLibrary')

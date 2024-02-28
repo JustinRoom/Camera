@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import jsc.org.lib.basic.framework.ABaseActivity;
 import jsc.org.lib.camera.CameraConfig;
 import jsc.org.lib.camera.CameraFragment;
 import jsc.org.lib.camera.CameraMaskBuilder;
@@ -32,15 +33,13 @@ import jsc.org.lib.camera.utils.SoundPoolPlayer;
 import jsc.org.lib.camera.utils.YuvTransfer;
 import jsc.org.lib.camera.utils.YuvUtils;
 
-public class MainActivity extends BaseActivity {
+public class MainActivity extends ABaseActivity {
 
     ActivityMainBinding binding = null;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    public View initContentView() {
         binding = ActivityMainBinding.inflate(getLayoutInflater());
-        setContentView(binding.getRoot());
         binding.btnOpenCamera.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -57,6 +56,7 @@ public class MainActivity extends BaseActivity {
         });
         YuvTransfer.getInstance().init(getApplicationContext());
         SoundPoolPlayer.getInstance().register(getApplicationContext());
+        return binding.getRoot();
     }
 
     @Override
@@ -67,13 +67,12 @@ public class MainActivity extends BaseActivity {
     }
 
     @Override
-    public void onBackPressed() {
+    public boolean onCustomBackPressed() {
         Fragment f = getSupportFragmentManager().findFragmentByTag("_camera");
         if (f != null) {
             getSupportFragmentManager().beginTransaction().remove(f).commit();
-            return;
         }
-        super.onBackPressed();
+        return f != null;
     }
 
     @Override
@@ -105,7 +104,7 @@ public class MainActivity extends BaseActivity {
         config.cameraId = 0;
         config.frontExtraDisplayOri = 0;
         config.backgroundExtraDisplayOri = 0;
-        config.previewWidth = 720;
+        config.previewWidth = 1280;
         config.previewHeight = 720;
         config.previewDelay = 200L;
         config.frameCallbackDelay = 400L;

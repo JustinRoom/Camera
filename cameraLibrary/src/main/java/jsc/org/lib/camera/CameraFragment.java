@@ -720,41 +720,39 @@ public class CameraFragment extends Fragment {
         Camera.Size target = null;
         if (config.previewWidth > 0 && config.previewHeight > 0) {
             for (Camera.Size size : parameters.getSupportedPreviewSizes()) {
-                if (config.previewWidth == size.width && config.previewHeight == size.height) {
+                if (config.previewWidth == size.width
+                        && config.previewHeight == size.height) {
                     target = size;
                     break;
                 }
             }
-            if (target != null) {
-                if (target.width * 9 == target.height * 16) {
-                    mRatio = isLandscape() ? new VideoRatio(16, 9) : new VideoRatio(9, 16);
-                } else if (target.width * 3 == target.height * 4) {
-                    mRatio = isLandscape() ? new VideoRatio(4, 3) : new VideoRatio(3, 4);
-                } else if (target.width == target.height) {
-                    mRatio = new VideoRatio(1, 1);
-                } else {
-                    //不支持的分辨率比例
-                    target = null;
+        }
+        if (target == null) {
+            final float ratio = vh * 1.0f / vw;
+            final List<Camera.Size> validSizes = new ArrayList<>();
+            for (Camera.Size s : parameters.getSupportedPreviewSizes()) {
+                if (s.width >= vw / 2
+                        && s.height >= vh / 2) {
+                    validSizes.add(s);
                 }
             }
+            Collections.sort(validSizes, new Comparator<Camera.Size>() {
+                @Override
+                public int compare(Camera.Size o1, Camera.Size o2) {
+                    float hwRatio1 = Math.abs(o1.width * 1.0f / o1.height - ratio);
+                    float hwRatio2 = Math.abs(o2.width * 1.0f / o2.height - ratio);
+                    if (hwRatio1 < hwRatio2) {
+                        return -1;
+                    } else if (hwRatio1 > hwRatio2) {
+                        return 1;
+                    }
+                    return 0;
+                }
+            });
+            target = validSizes.isEmpty() ? parameters.getSupportedPreviewSizes().get(0) : validSizes.get(0);
         }
-        if (target == null) {
-            target = isLandscape() ? getBestLandscapeSupportedSize(parameters.getSupportedPreviewSizes(), vw, vh)
-                    : getBestPortraitSupportedSize(parameters.getSupportedPreviewSizes(), vw, vh);
-        }
-        if (target == null) {
-            //didn't find the suitable preview size
-            //tell user not support.
-            mCamera.release();
-            mCamera = null;
-            new AlertDialog.Builder(getActivity())
-                    .setTitle("设备不支持")
-                    .setMessage("此设备不具备特定的分辨率比例(16:9、4:3、1:1)。")
-                    .setPositiveButton("我知道了", null)
-                    .setCancelable(false)
-                    .show();
-            return;
-        }
+        int gcd = gcd(target.width, target.height);
+        mRatio = new VideoRatio(target.width / gcd, target.height / gcd);
         previewWidth = target.width;
         previewHeight = target.height;
         parameters.setPreviewSize(previewWidth, previewHeight);
@@ -773,6 +771,25 @@ public class CameraFragment extends Fragment {
         mCamera.setParameters(parameters);
         mCamera.setPreviewCallback(previewCallback);
         onConfigPreviewSize(previewWidth, previewHeight);
+    }
+
+    private boolean needRotate() {
+        int r = mDisplayRotation / 90;
+        return r % 2 > 0;
+    }
+
+    /**
+     * 计算最大公约数
+     *
+     * @param num1
+     * @param num2
+     * @return
+     */
+    private int gcd(int num1, int num2) {
+        if (num2 == 0) {
+            return num1;
+        }
+        return gcd(num2, num1 % num2);
     }
 
     private void sendAutoFocusMessage(long delay) {
@@ -830,197 +847,6 @@ public class CameraFragment extends Fragment {
         return result;
     }
 
-    /**
-     * 计算横屏最佳分辨率
-     *
-     * @param sizes
-     * @param viewWidth
-     * @param viewHeight
-     * @return
-     */
-    public Camera.Size getBestLandscapeSupportedSize(List<Camera.Size> sizes, final int viewWidth, final int viewHeight) {
-        if (sizes == null || sizes.isEmpty() || viewWidth * viewHeight == 0) {
-            return null;
-        }
-        //计算与16:9、4:3、1:1最相近的的比例
-        final float ratio = vw * 1.0f / vh;
-        List<VideoRatio> list = new ArrayList<>();
-        list.add(new VideoRatio(16, 9));
-        list.add(new VideoRatio(4, 3));
-        list.add(new VideoRatio(1, 1));
-        Collections.sort(list, new Comparator<VideoRatio>() {
-            @Override
-            public int compare(VideoRatio o1, VideoRatio o2) {
-                float val1 = Math.abs(o1.width * 1.0f / o1.height - ratio);
-                float val2 = Math.abs(o2.width * 1.0f / o2.height - ratio);
-                if (val1 < val2) {
-                    return -1;
-                } else if (val1 > val2) {
-                    return 1;
-                }
-                return 0;
-            }
-        });
-
-        //集合3种比例的分辨率
-        List<Camera.Size> list169 = new ArrayList<>();
-        List<Camera.Size> list43 = new ArrayList<>();
-        List<Camera.Size> list11 = new ArrayList<>();
-        Map<String, List<Camera.Size>> map = new HashMap<>();
-        map.put("16_9", list169);
-        map.put("4_3", list43);
-        map.put("1_1", list11);
-        for (Camera.Size size : sizes) {
-            if (isEqualRatio(size, 16, 9)) {
-                list169.add(size);
-            }
-            if (isEqualRatio(size, 4, 3)) {
-                list43.add(size);
-            }
-            if (isEqualRatio(size, 1, 1)) {
-                list11.add(size);
-            }
-        }
-        //升序排序
-        Comparator<Camera.Size> comparator = new Comparator<Camera.Size>() {
-            @Override
-            public int compare(Camera.Size o1, Camera.Size o2) {
-                int val1 = o1.width * o1.height;
-                int val2 = o2.width * o2.height;
-                if (val1 < val2) {
-                    return -1;
-                } else if (val1 > val2) {
-                    return 1;
-                }
-                return 0;
-            }
-        };
-        Collections.sort(list169, comparator);
-        Collections.sort(list43, comparator);
-        Collections.sort(list11, comparator);
-
-        for (int i = 0; i < 3; i++) {
-            mRatio = list.get(i);
-            String key = mRatio.key();
-            List<Camera.Size> tempList = map.get(key);
-            if (tempList == null) continue;
-            if (tempList.size() == 0) continue;
-            return latestSupportedSize(tempList);
-        }
-        return null;
-    }
-
-    /**
-     * 计算竖屏最佳分辨率
-     *
-     * @param sizes
-     * @param viewWidth
-     * @param viewHeight
-     * @return
-     */
-    public Camera.Size getBestPortraitSupportedSize(List<Camera.Size> sizes, final int viewWidth, final int viewHeight) {
-        if (sizes == null || sizes.isEmpty() || viewWidth * viewHeight == 0) {
-            return null;
-        }
-        //计算与9:16、3:4、1:1最相近的的比例
-        final float ratio = vw * 1.0f / vh;
-        List<VideoRatio> list = new ArrayList<>();
-        list.add(new VideoRatio(9, 16));
-        list.add(new VideoRatio(3, 4));
-        list.add(new VideoRatio(1, 1));
-        Collections.sort(list, new Comparator<VideoRatio>() {
-            @Override
-            public int compare(VideoRatio o1, VideoRatio o2) {
-                float val1 = Math.abs(o1.width * 1.0f / o1.height - ratio);
-                float val2 = Math.abs(o2.width * 1.0f / o2.height - ratio);
-                if (val1 < val2) {
-                    return -1;
-                } else if (val1 > val2) {
-                    return 1;
-                }
-                return 0;
-            }
-        });
-
-        //集合3种比例的分辨率
-        List<Camera.Size> list916 = new ArrayList<>();
-        List<Camera.Size> list34 = new ArrayList<>();
-        List<Camera.Size> list11 = new ArrayList<>();
-        Map<String, List<Camera.Size>> map = new HashMap<>();
-        map.put("9_16", list916);
-        map.put("3_4", list34);
-        map.put("1_1", list11);
-        for (Camera.Size size : sizes) {
-            if (isEqualRatio(size, 16, 9)) {
-                list916.add(size);
-            }
-            if (isEqualRatio(size, 4, 3)) {
-                list34.add(size);
-            }
-            if (isEqualRatio(size, 1, 1)) {
-                list11.add(size);
-            }
-        }
-        //升序排序
-        Comparator<Camera.Size> comparator = new Comparator<Camera.Size>() {
-            @Override
-            public int compare(Camera.Size o1, Camera.Size o2) {
-                int val1 = o1.width * o1.height;
-                int val2 = o2.width * o2.height;
-                if (val1 < val2) {
-                    return -1;
-                } else if (val1 > val2) {
-                    return 1;
-                }
-                return 0;
-            }
-        };
-        Collections.sort(list916, comparator);
-        Collections.sort(list34, comparator);
-        Collections.sort(list11, comparator);
-
-        for (int i = 0; i < 3; i++) {
-            mRatio = list.get(i);
-            String key = mRatio.key();
-            List<Camera.Size> tempList = map.get(key);
-            if (tempList == null) continue;
-            if (tempList.size() == 0) continue;
-            return latestSupportedSize(tempList);
-        }
-        return null;
-    }
-
-    private Camera.Size latestSupportedSize(List<Camera.Size> list) {
-        List<Camera.Size> copy = new ArrayList<>(list);
-        Point outSize = new Point();
-        WindowManager wm = (WindowManager) getContext().getSystemService(Context.WINDOW_SERVICE);
-        wm.getDefaultDisplay().getRealSize(outSize);
-        final int max = Math.max(outSize.x, outSize.y);
-        final int min = Math.min(outSize.x, outSize.y);
-        Collections.sort(copy, new Comparator<Camera.Size>() {
-            @Override
-            public int compare(Camera.Size o1, Camera.Size o2) {
-                int val1 = (o1.width - max) + (o1.height - min);
-                int val2 = (o2.width - max) + (o2.height - min);
-                if (val1 < val2) {
-                    return -1;
-                } else if (val1 > val2) {
-                    return 1;
-                }
-                return 0;
-            }
-        });
-        for (Camera.Size size : copy) {
-            int val = (size.width - max) + (size.height - min);
-            if (val >= 0) return size;
-        }
-        return list.get(list.size() - 1);
-    }
-
-    private boolean isEqualRatio(Camera.Size size, int wr, int hr) {
-        return size.width * hr == size.height * wr;
-    }
-
     private void setSurface(SurfaceTexture surface) {
         if (mCamera != null) {
             try {
@@ -1074,11 +900,14 @@ public class CameraFragment extends Fragment {
 
     protected void onConfigPreviewSize(int previewWidth, int previewHeight) {
         text("solution", false, String.format(Locale.US, "%1d x %2d", previewWidth, previewHeight));
-        int multi0 = vw / mRatio.width;
-        int multi1 = vh / mRatio.height;
-        int multi = Math.min(multi0, multi1);
-        int tvw = mRatio.width * multi;
-        int tvh = mRatio.height * multi;
+        int wr = needRotate() ? mRatio.height : mRatio.width;
+        int hr = needRotate() ? mRatio.width : mRatio.height;
+        int multi = Math.min(vw / wr, vh / hr);
+        if (multi % 2 == 1) {
+            multi--;
+        }
+        int tvw = wr * multi;
+        int tvh = hr * multi;
         resize("display", tvw, tvh);
         resize("mask", tvw, tvh);
         mCameraMaskBuilder.frameSize(previewWidth, previewHeight);
@@ -1168,10 +997,6 @@ public class CameraFragment extends Fragment {
         translateAnimation.setRepeatCount(Animation.INFINITE);
         scannerView.setAnimation(translateAnimation);
         translateAnimation.start();
-    }
-
-    public final void updateMaskUIAgain() {
-        updateMaskUI(mCameraMaskBuilder.getViewWidth(), mCameraMaskBuilder.getViewHeight());
     }
 
     public final boolean isLandscape() {

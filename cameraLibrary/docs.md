@@ -20,6 +20,8 @@
         config.cameraId = 0;
         config.frontExtraDisplayOri = 0;
         config.backgroundExtraDisplayOri = 0;
+        config.previewWidth = 1280;
+        config.previewHeight = 720;
         config.previewDelay = 200L;
         config.frameCallbackDelay = 400L;
         config.enableScanAnim = true;
